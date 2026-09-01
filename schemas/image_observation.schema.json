@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/album-memory/image_observation-v1.1.schema.json",
+  "title": "image_observation v1.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "observation_id",
+    "asset_id",
+    "generated_at",
+    "producer",
+    "granular_outputs",
+    "scene",
+    "facts",
+    "limitations",
+    "safety"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.1"},
+    "observation_id": {"type": "string", "pattern": "^obs_[A-Za-z0-9_-]{8,80}$"},
+    "asset_id": {"type": "string", "pattern": "^asset_[A-Za-z0-9_-]{4,120}$"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "producer": {"$ref": "#/$defs/producer"},
+    "granular_outputs": {"$ref": "#/$defs/granular_outputs"},
+    "scene": {"$ref": "#/$defs/scene"},
+    "input_metadata": {"oneOf": [{"$ref": "#/$defs/input_metadata"}, {"type": "null"}]},
+    "facts": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {"$ref": "#/$defs/fact"}
+    },
+    "visual_style": {"oneOf": [{"$ref": "#/$defs/visual_style"}, {"type": "null"}]},
+    "limitations": {"$ref": "#/$defs/limitations"},
+    "safety": {"$ref": "#/$defs/safety"}
+  },
+  "$defs": {
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model_id", "prompt_version"],
+      "properties": {
+        "model_id": {"type": "string", "minLength": 1, "maxLength": 120},
+        "prompt_version": {"type": "string", "minLength": 1, "maxLength": 80},
+        "input_sha256": {
+          "oneOf": [
+            {"type": "string", "pattern": "^[A-Fa-f0-9]{64}$"},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "note"],
+      "properties": {
+        "source": {"enum": ["pixel", "ocr", "exif", "provided_metadata"]},
+        "note": {"type": "string", "minLength": 1, "maxLength": 300},
+        "bbox": {
+          "oneOf": [
+            {
+              "type": "array",
+              "prefixItems": [
+                {"type": "number", "minimum": 0, "maximum": 1},
+                {"type": "number", "minimum": 0, "maximum": 1},
+                {"type": "number", "minimum": 0, "maximum": 1},
+                {"type": "number", "minimum": 0, "maximum": 1}
+              ],
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {"type": "null"}
+          ]
+        },
+        "ocr_text": {"type": ["string", "null"], "maxLength": 500},
+        "source_id": {"type": ["string", "null"], "maxLength": 120}
+      }
+    },
+    "candidate_label": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "confidence", "reason"],
+      "properties": {
+        "label": {"type": "string", "minLength": 1, "maxLength": 80},
+        "confidence": {"$ref": "#/$defs/confidence"},
+        "reason": {"type": "string", "minLength": 1, "maxLength": 200}
+      }
+    },
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity_id", "entity_type", "label", "evidence", "confidence", "uncertainty"],
+      "properties": {
+        "entity_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{4,120}$"},
+        "entity_type": {"enum": ["person", "object", "text", "scene", "visible_action"]},
+        "label": {"type": "string", "minLength": 1, "maxLength": 80},
+        "count": {"type": "integer", "minimum": 1, "maximum": 1000, "default": 1},
+        "attributes": {"type": "object", "additionalProperties": {"type": "string"}},
+        "candidate_labels": {"type": "array", "maxItems": 5, "items": {"$ref": "#/$defs/candidate_label"}},
+        "evidence": {"type": "array", "minItems": 1, "maxItems": 8, "items": {"$ref": "#/$defs/evidence"}},
+        "confidence": {"$ref": "#/$defs/confidence"},
+        "uncertainty": {"type": "string", "minLength": 1, "maxLength": 300}
+      }
+    },
+    "granular_outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key_entities", "detailed_description"],
+      "properties": {
+        "key_entities": {"type": "array", "maxItems": 50, "items": {"$ref": "#/$defs/entity"}},
+        "detailed_description": {"type": "string", "minLength": 1, "maxLength": 1500}
+      }
+    },
+    "coarse_pixel_location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "confidence"],
+      "properties": {
+        "level": {"enum": ["none", "country", "city", "region"]},
+        "text": {"type": ["string", "null"], "maxLength": 80},
+        "confidence": {"$ref": "#/$defs/confidence"}
+      }
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["visible_summary", "source_kind", "user_presence", "season_from_pixels", "location_from_pixels"],
+      "properties": {
+        "visible_summary": {"type": "string", "minLength": 1, "maxLength": 300},
+        "source_kind": {"enum": ["camera", "screenshot", "download", "chat_received", "album", "imported", "unknown"]},
+        "user_presence": {"enum": ["confirmed", "possible", "absent", "unknown"]},
+        "season_from_pixels": {"enum": ["spring", "summer", "autumn", "winter", "unknown"]},
+        "location_from_pixels": {"$ref": "#/$defs/coarse_pixel_location"}
+      }
+    },
+    "metadata_value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "note"],
+      "properties": {
+        "value": {"type": ["string", "null"], "maxLength": 300},
+        "source": {"const": "provided_metadata"},
+        "note": {"type": "string", "minLength": 1, "maxLength": 300}
+      }
+    },
+    "metadata_location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "source", "note"],
+      "properties": {
+        "level": {"enum": ["country", "city", "region", "unknown"]},
+        "country": {"type": ["string", "null"], "maxLength": 80},
+        "city": {"type": ["string", "null"], "maxLength": 80},
+        "region": {"type": ["string", "null"], "maxLength": 80},
+        "source": {"const": "provided_metadata"},
+        "note": {"type": "string", "minLength": 1, "maxLength": 300}
+      }
+    },
+    "metadata_label": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "source", "usage_restriction"],
+      "properties": {
+        "value": {"type": "string", "minLength": 1, "maxLength": 80},
+        "source": {"const": "provided_metadata"},
+        "usage_restriction": {"type": "string", "minLength": 1, "maxLength": 200}
+      }
+    },
+    "input_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "capture_time": {"oneOf": [{"$ref": "#/$defs/metadata_value"}, {"type": "null"}]},
+        "coarse_location": {"oneOf": [{"$ref": "#/$defs/metadata_location"}, {"type": "null"}]},
+        "collection_source": {"oneOf": [{"$ref": "#/$defs/metadata_value"}, {"type": "null"}]},
+        "labels": {"type": "array", "maxItems": 30, "items": {"$ref": "#/$defs/metadata_label"}}
+      }
+    },
+    "fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fact_id", "subject_ref", "predicate", "value", "evidence", "confidence", "uncertainty"],
+      "properties": {
+        "fact_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{4,120}$"},
+        "subject_ref": {"type": "string", "minLength": 1, "maxLength": 120},
+        "predicate": {"type": "string", "minLength": 1, "maxLength": 80},
+        "value": {},
+        "evidence": {"type": "array", "minItems": 1, "maxItems": 8, "items": {"$ref": "#/$defs/evidence"}},
+        "confidence": {"$ref": "#/$defs/confidence"},
+        "uncertainty": {"type": "string", "minLength": 1, "maxLength": 300}
+      }
+    },
+    "visual_style": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "composition": {"type": "array", "maxItems": 20, "items": {"type": "string"}},
+        "lighting": {"type": "array", "maxItems": 20, "items": {"type": "string"}},
+        "colors": {"type": "array", "maxItems": 20, "items": {"type": "string"}},
+        "editing_signals": {"type": "array", "maxItems": 20, "items": {"type": "string"}},
+        "uncertainty": {"type": "string", "minLength": 1, "maxLength": 300}
+      }
+    },
+    "limitations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "unknown_identity": {"type": "boolean", "default": true},
+        "unknown_user_attribution": {"type": "boolean", "default": true},
+        "unknown_ownership": {"type": "boolean", "default": true},
+        "unknown_exact_location": {"type": "boolean", "default": true},
+        "notes": {"type": "array", "maxItems": 30, "items": {"type": "string"}}
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "is_sensitive": {"type": "boolean", "default": false},
+        "contains_minor": {"type": ["boolean", "null"]},
+        "blocked_from_profile": {"type": "boolean", "default": false},
+        "redactions": {"type": "array", "maxItems": 30, "items": {"type": "string"}},
+        "reasons": {"type": "array", "maxItems": 30, "items": {"type": "string"}}
+      }
+    }
+  }
+}

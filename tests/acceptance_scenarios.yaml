@@ -1,0 +1,39 @@
+status: not_run
+execution_constraints:
+  - do_not_run_pytest_in_this_delivery
+  - requires_postgresql_16_and_pgvector
+  - embedding_cases_require_existing_bge_m3
+scenarios:
+  - id: idempotent_replay
+    given: same user, observation ID, idempotency key and canonical content
+    expect: original observation and job IDs with idempotent_replay=true
+  - id: immutable_observation_conflict
+    given: same user and observation ID with different canonical content
+    expect: ObservationConflictError and no write
+  - id: image_reparse_version
+    given: same asset with a new observation ID
+    expect: immutable version increment and supersedes_observation_id chain
+  - id: event_split_by_hard_gate
+    given: semantically similar images with incompatible time, city, source trust or subject presence
+    expect: separate events even when vector similarity is high
+  - id: event_merge_after_hard_gate
+    given: compatible metadata and subject presence plus similarity above adaptive threshold
+    expect: one event, same_event edges and a new L3 summary version
+  - id: positive_and_counter_evidence
+    given: conflicting immutable facts with equal rule priority
+    expect: disputed facts, counter Claim evidence and needs_review without LLM activation
+  - id: short_and_long_thresholds
+    given: S and L signals with different independent-event counts and spans
+    expect: only gate-passing claims active; all others candidate
+  - id: short_claim_expiry
+    given: active short Claim past expires_at
+    expect: dry-run report first; applied maintenance ends the Claim
+  - id: memory_archive_restore
+    given: unprotected low-strength idle memory followed by actual injection or new evidence
+    expect: soft archive without evidence deletion, then restoration/new active version
+  - id: cross_user_isolation
+    given: two users with overlapping external labels and queries
+    expect: no cross-user candidates, graph edges, Claims or reinforcement
+  - id: candidate_claim_not_injected
+    given: candidate/conflicted/ended/expired Claim under a recommendation query
+    expect: retrieval selected_claim_ids excludes it

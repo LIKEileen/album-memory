@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "album-memory"
+version = "0.1.0"
+description = "Auditable multi-granularity memory and profile module for album VLM agents"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "alembic>=1.14",
+  "jieba>=0.42",
+  "networkx>=3.4",
+  "numpy>=2.0",
+  "openai>=1.75",
+  "pgvector>=0.3.6",
+  "psycopg[binary]>=3.2",
+  "pydantic>=2.11",
+  "PyYAML>=6.0",
+  "rank-bm25>=0.2.2",
+  "scikit-learn>=1.6",
+  "sentence-transformers>=3.4",
+  "SQLAlchemy>=2.0.38",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.3"]
+
+[project.scripts]
+album-memory = "album_memory.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["album_memory*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "integration: requires PostgreSQL 16, pgvector, or the local BGE-M3 model",
+]

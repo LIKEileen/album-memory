@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/album-memory/profile_snapshot.schema.json",
+  "title": "Profile Snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["user_id", "generated_at", "short_term", "long_term"],
+  "properties": {
+    "user_id": {"type": "string", "format": "uuid"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "short_term": {
+      "type": "array",
+      "items": {"$ref": "profile_claim.schema.json"}
+    },
+    "long_term": {
+      "type": "array",
+      "items": {"$ref": "profile_claim.schema.json"}
+    }
+  }
+}

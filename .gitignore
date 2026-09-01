@@ -1,0 +1,33 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+config.yaml
+*.pem
+*.key
+
+# Runtime and generated data
+*.log
+*.sqlite*
+*.db
+*.npz
+*.npy
+chroma/
+data/
+models/
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/

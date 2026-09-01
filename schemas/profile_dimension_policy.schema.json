@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/album-memory/profile_dimension_policy.schema.json",
+  "title": "Fixed Profile Dimension Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dimension_id",
+    "horizon",
+    "title",
+    "allowed_signals",
+    "min_independent_events",
+    "min_span_days",
+    "subject_required",
+    "min_source_modes",
+    "min_source_reliability",
+    "user_confirmation_required",
+    "max_auto_confidence",
+    "forbidden_inferences"
+  ],
+  "properties": {
+    "dimension_id": {"enum": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9", "L10"]},
+    "horizon": {"enum": ["short", "long"]},
+    "title": {"type": "string", "minLength": 1},
+    "allowed_signals": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "min_independent_events": {"type": "integer", "minimum": 1},
+    "min_span_days": {"type": "integer", "minimum": 0},
+    "subject_required": {"type": "boolean"},
+    "min_source_modes": {"type": "integer", "minimum": 1},
+    "min_source_reliability": {"type": "number", "minimum": 0, "maximum": 1},
+    "user_confirmation_required": {"type": "boolean"},
+    "max_auto_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "forbidden_inferences": {"type": "array", "items": {"type": "string"}}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"dimension_id": {"pattern": "^S"}}},
+      "then": {"properties": {"horizon": {"const": "short"}}}
+    },
+    {
+      "if": {"properties": {"dimension_id": {"pattern": "^L"}}},
+      "then": {"properties": {"horizon": {"const": "long"}}}
+    }
+  ]
+}
